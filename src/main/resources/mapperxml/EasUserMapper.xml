@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasUserMapper">
+    <update id="updateUser" parameterType="com.jubilantz.entity.EasUser">
+        update eas_user
+        <set>
+            <if test="username != null">username=#{username},</if>
+            <if test="password != null">password=#{password},</if>
+            <if test="salt != null">salt=#{salt},</if>
+            <if test="locked != null">locked=#{locked}</if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        delete from eas_user where id = #{id}
+    </delete>
+    <delete id="batchDelete" parameterType="java.lang.reflect.Array">
+        delete from eas_user where id in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="get" parameterType="int" resultMap="userMap">
+        select * from eas_user where id = #{id}
+    </select>
+
+    <resultMap id="userMap" type="com.jubilantz.entity.EasUser" autoMapping="true">
+        <id property="id" column="id"></id>
+        <collection property="roles" javaType="java.util.List" ofType="com.jubilantz.entity.EasRole" column="id" select="com.jubilantz.mappers.EasRoleMapper.getByUserId"></collection>
+    </resultMap>
+    <select id="getList" parameterType="com.jubilantz.entity.EasUser" resultMap="userMap">
+        select * from eas_user
+        <where>
+            <if test="easUser.username != null and easUser.username != ''">
+                and username like concat('%',#{username},'%')
+            </if>
+            <if test="easUser.roles != null and easUser.roles.size != 0 and easUser.roles[0].id !=-1">
+                and id in(select eas_user_id from eas_user_role where eas_role_id in
+                <foreach collection="easUser.roles" item="item" open="(" close=")" separator=",">
+                    #{item.id}
+                </foreach>
+                )
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+
+    <insert id="add" parameterType="com.jubilantz.entity.EasUser" useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        insert into eas_user(username, password, salt, locked)
+          values(#{username},#{password},#{salt},#{locked})
+    </insert>
+    <insert id="addUserRole">
+        insert into eas_user_role(eas_user_id, eas_role_id)
+        values
+        <foreach collection="roleIds" item="item" separator=",">
+            (#{userId},#{item})
+        </foreach>
+    </insert>
+
+    <delete id="deleteUserRole">
+        delete from eas_user_role where eas_user_id = #{id}
+    </delete>
+
+    <select id="getByUserName" parameterType="java.lang.String" resultType="com.jubilantz.entity.EasUser">
+        select * from eas_user where username = #{username}
+    </select>
+    <select id="findUsernameById" resultType="java.lang.String">
+        select username from eas_user where id = #{userid}
+    </select>
+    <select id="findUserName" resultType="com.jubilantz.entity.EasUser">
+        select * from eas_user where username = #{username}
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from eas_user
+    </select>
+    <select id="findRoleIdByUserId" resultType="java.lang.Integer">
+        select eas_role_id from eas_user_role
+        <where>
+            <if test="userid != null and userid != ''">
+                eas_user_id = #{userid}
+            </if>
+        </where>
+    </select>
+
+    <select id="findRoleIdByUserId2" resultType="java.lang.Integer">
+        select eas_role_id from eas_user_role
+        <where>
+            <if test="userid != null and userid != ''">
+                eas_user_id = #{userid}
+            </if>
+        </where>
+    </select>
+    <select id="findUserById" resultType="com.jubilantz.entity.EasUser">
+        select * from eas_user where id = #{id}
+    </select>
+    <select id="getRoleCountByUid" resultType="java.lang.Integer">
+        select count(*) from eas_user_role
+        <where>
+            <if test="userid != null and userid != ''">
+                eas_user_id = #{userid}
+            </if>
+        </where>
+    </select>
+
+
+</mapper>

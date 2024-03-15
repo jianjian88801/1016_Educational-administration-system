@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasCourseMapper">
+    <resultMap id="BaseResultMap" type="com.jubilantz.entity.EasCourse">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="start_date"  jdbcType="DATE" property="startDate" />
+        <result column="end_date"  jdbcType="DATE" property="endDate" />
+        <result column="class_hour" jdbcType="SMALLINT" property="classHour" />
+        <result column="test_mode" jdbcType="VARCHAR" property="testMode" />
+        <result column="student_num" jdbcType="INTEGER" property="studentNum" />
+        <result column="choice_num" jdbcType="INTEGER" property="choiceNum" />
+        <result column="complete" jdbcType="INTEGER" property="complete" />
+
+        <result column="t_id" jdbcType="INTEGER" property="tId" />
+        <result column="base_course_id" jdbcType="INTEGER" property="baseCourseId" />
+
+        <result column="teacherName" jdbcType="VARCHAR" property="teacherName" />
+        <result column="courseName" jdbcType="VARCHAR" property="courseName" />
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, start_date, end_date, class_hour, test_mode, student_num, choice_num, t_id, base_course_id
+    </sql>
+    <insert id="addCourse" parameterType="com.jubilantz.entity.EasCourse">
+        insert into eas_course
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="startDate != null">
+                start_date,
+            </if>
+            <if test="endDate != null">
+                end_date,
+            </if>
+            <if test="classHour != null">
+                class_hour,
+            </if>
+            <if test="testMode != null">
+                test_mode,
+            </if>
+            <if test="studentNum != null">
+                student_num,
+            </if>
+            <if test="choiceNum != null">
+                choice_num,
+            </if>
+            <if test="tId != null">
+                t_id,
+            </if>
+            <if test="baseCourseId != null">
+                base_course_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="startDate != null">
+                #{startDate,jdbcType=DATE},
+            </if>
+            <if test="endDate != null">
+                #{endDate,jdbcType=DATE},
+            </if>
+            <if test="classHour != null">
+                #{classHour,jdbcType=SMALLINT},
+            </if>
+            <if test="testMode != null">
+                #{testMode,jdbcType=VARCHAR},
+            </if>
+            <if test="studentNum != null">
+                #{studentNum,jdbcType=INTEGER},
+            </if>
+            <if test="choiceNum != null">
+                #{choiceNum,jdbcType=INTEGER},
+            </if>
+            <if test="tId != null">
+                #{tId,jdbcType=VARCHAR},
+            </if>
+            <if test="baseCourseId != null">
+                #{baseCourseId,jdbcType=INTEGER},
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 加入if判断日期!=null 会更新失败-->
+    <update id="updateCourseById" parameterType="com.jubilantz.entity.EasCourse">
+        update eas_course
+        <set>
+
+                start_date = #{startDate,jdbcType=DATE},
+
+                end_date = #{endDate,jdbcType=DATE},
+
+            <if test="classHour != null and classHour != '' ">
+                class_hour = #{classHour,jdbcType=SMALLINT},
+            </if>
+            <if test="testMode != null and testMode != '' ">
+                test_mode = #{testMode,jdbcType=VARCHAR},
+            </if>
+            <if test="studentNum != null and studentNum != '' ">
+                student_num = #{studentNum,jdbcType=INTEGER},
+            </if>
+            <if test="choiceNum != null and choiceNum != ''">
+                choice_num = #{choiceNum,jdbcType=INTEGER},
+            </if>
+            <if test="complete != null and complete != ''">
+                complete = #{complete,jdbcType=INTEGER},
+            </if>
+            <if test="tId != null and tId != ''">
+                t_id = #{tId,jdbcType=INTEGER},
+            </if>
+            <if test="baseCourseId != null and baseCourseId != ''">
+                base_course_id = #{baseCourseId,jdbcType=INTEGER}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateDate">
+        update eas_course
+        <set>
+            <if test="startDate != null">
+                start_date = #{startDate,jdbcType=DATE},
+            </if>
+            <if test="endDate != null">
+                end_date = #{endDate,jdbcType=DATE}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="completeCourse" parameterType="com.jubilantz.entity.EasCourse">
+        update eas_course
+        <set>
+            <if test="complete != null and complete != ''">
+                complete = #{complete,jdbcType=INTEGER}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <delete id="batchDeleteCourse" parameterType="java.lang.reflect.Array">
+        delete from eas_course where id in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from eas_course
+    </select>
+    <select id="getList" resultMap="BaseResultMap">
+        select
+        B.id, start_date, end_date, class_hour, test_mode, student_num, choice_num, t_id, base_course_id
+        , A.coursename as courseName, C.name as teacherName
+        from eas_course as B, eas_base_course as A, eas_teacher as C
+        <where>
+            B.base_course_id = A.id and B.t_id = C.id
+            <if test="easCourse.courseName != null and easCourse.courseName != ''">
+                and A.coursename like concat('%',#{easCourse.courseName},'%')
+            </if>
+            <if test="easCourse.teacherName != null and easCourse.teacherName != ''">
+                and C.name like CONCAT ('%',#{easCourse.teacherName},'%')
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="findCourseByBaseCourseIdAndTeacherId" resultType="com.jubilantz.entity.EasCourse">
+        select * from eas_course
+        <where>
+            <if test="baseCourseId != null and baseCourseId != '' and tId != null and tId != ''">
+                and base_course_id = #{baseCourseId} and t_id = #{tId}
+            </if>
+
+        </where>
+    </select>
+    <select id="getCourseById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from eas_course
+        where id = #{id}
+    </select>
+    <select id="getCountBytId" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select count(*) from eas_course where t_id = #{tId}
+    </select>
+    <select id="getCourseListBytId" resultMap="BaseResultMap">
+        select
+        B.id, start_date, end_date, class_hour, test_mode, student_num, choice_num, complete, t_id, base_course_id
+        , A.coursename as courseName, C.name as teacherName
+        from eas_course as B, eas_base_course as A, eas_teacher as C
+        <where>
+            B.base_course_id = A.id and B.t_id = C.id
+            <if test="tId != null and tId != ''">
+                and B.t_id = #{tId}
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+
+<!--    <select id="getTotalItemsCountBySid" resultType="java.lang.Integer">-->
+<!--        select count(*)-->
+<!--        from eas_course as C, eas_teacher as T, eas_base_course as B-->
+<!--        <where>-->
+<!--            C.base_course_id = B.id and C.t_id = T.id and start_date > CURRENT_DATE-->
+<!--            <if test="searchKey != null and searchKey != '' ">-->
+<!--                and(-->
+<!--                (B.coursename like CONCAT ('%',#{searchKey},'%') )-->
+<!--                or (T.name like CONCAT ('%',#{searchKey},'%') )-->
+<!--                )-->
+<!--            </if>-->
+<!--            and C.complete = 0-->
+<!--            and C.id-->
+<!--            <if test="isAll == 1 ">-->
+<!--                not-->
+<!--            </if>-->
+<!--            in ( select c_id-->
+<!--            from eas_score, eas_student as S-->
+<!--            where S.id= #{sId} and S.id = eas_score.s_id )-->
+<!--        </where>-->
+<!--    </select>-->
+    <select id="getTotalItemsCountBySid" resultType="java.lang.Integer">
+        select count(*)
+        from eas_course as C, eas_teacher as T, eas_base_course as B
+        <where>
+            C.base_course_id = B.id and C.t_id = T.id
+            <if test="searchKey != null and searchKey != '' ">
+                and(
+                (B.coursename like CONCAT ('%',#{searchKey},'%') )
+                or (T.name like CONCAT ('%',#{searchKey},'%') )
+                )
+            </if>
+            and C.complete = 0
+            and C.id
+            <if test="isAll == 1 ">
+                not
+            </if>
+            in ( select c_id
+            from eas_score, eas_student as S
+            where S.id= #{sId} and S.id = eas_score.s_id )
+        </where>
+    </select>
+<!--    <select id="getCourseListBySid" resultMap="BaseResultMap">-->
+<!--        select-->
+<!--        C.id, start_date, end_date, class_hour, test_mode, student_num,-->
+<!--        choice_num, B.coursename as courseName, T.name as teacherName-->
+
+<!--        from eas_course as C, eas_teacher as T, eas_base_course as B-->
+<!--        <where>-->
+<!--            C.base_course_id = B.id and C.t_id = T.id and start_date > CURRENT_DATE-->
+<!--            <if test="searchKey != null and searchKey != '' ">-->
+<!--                and(-->
+<!--                (B.coursename like CONCAT ('%',#{searchKey},'%') )-->
+<!--                or (T.name like CONCAT ('%',#{searchKey},'%') )-->
+<!--                )-->
+<!--            </if>-->
+<!--            and C.complete = 0-->
+<!--            and C.id-->
+<!--            <if test="isAll == 1 ">-->
+<!--                not-->
+<!--            </if>-->
+<!--            in ( select c_id-->
+<!--            from eas_score, eas_student as S-->
+<!--            where S.id= #{sId} and S.id = eas_score.s_id )-->
+<!--        </where>-->
+<!--        <if test="pageUtil != null">-->
+<!--            limit #{pageUtil.pageStart},#{pageUtil.count}-->
+<!--        </if>-->
+<!--    </select>-->
+    <select id="getCourseListBySid" resultMap="BaseResultMap">
+        select
+        C.id, start_date, end_date, class_hour, test_mode, student_num,
+        choice_num, B.coursename as courseName, T.name as teacherName
+
+        from eas_course as C, eas_teacher as T, eas_base_course as B
+        <where>
+            C.base_course_id = B.id and C.t_id = T.id
+            <if test="searchKey != null and searchKey != '' ">
+                and(
+                (B.coursename like CONCAT ('%',#{searchKey},'%') )
+                or (T.name like CONCAT ('%',#{searchKey},'%') )
+                )
+            </if>
+            and C.complete = 0
+            and C.id
+            <if test="isAll == 1 ">
+                not
+            </if>
+            in ( select c_id
+            from eas_score, eas_student as S
+            where S.id= #{sId} and S.id = eas_score.s_id )
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="findCompleteByCourseId" resultType="java.lang.Integer">
+        select complete from eas_course where id = #{courseId}
+    </select>
+    <select id="getTotalPass" resultType="java.lang.Integer">
+        select count(S.score)
+        from eas_score as S,eas_course as C, eas_base_course as B
+        <where>
+            C.base_course_id = B.id
+            <if test="baseCourseId != null and baseCourseId != '' ">
+               and C.base_course_id = #{baseCourseId}
+            </if>
+            and C.complete = 1
+            and S.c_id = C.id
+            and S.score >= 60
+        </where>
+
+    </select>
+    <select id="getTotalNoPass" resultType="java.lang.Integer">
+        select count(S.score)
+        from eas_score as S,eas_course as C, eas_base_course as B
+        <where>
+            C.base_course_id = B.id
+            <if test="baseCourseId != null and baseCourseId != '' ">
+               and C.base_course_id = #{baseCourseId}
+            </if>
+            and C.complete = 1
+            and S.c_id = C.id
+            and 60 > S.score
+        </where>
+    </select>
+
+</mapper>

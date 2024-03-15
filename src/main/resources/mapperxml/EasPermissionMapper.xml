@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasPermissionMapper">
+    <select id="getAll" resultType="com.jubilantz.entity.EasPermission">
+        select * from eas_permission
+    </select>
+
+    <select id="getThird" parameterType="long" resultType="com.jubilantz.entity.EasPermission">
+      select * from eas_permission where parentid = #{id}
+    </select>
+    
+    <!--查询三级权限-->
+    <resultMap id="perMap002" type="com.jubilantz.entity.EasPermission" autoMapping="true">
+        <id column="id" property="id"></id>
+        <collection property="children" javaType="java.util.List" ofType="com.jubilantz.entity.EasPermission" column="id" select="getThird"></collection>
+    </resultMap>
+
+    <!--查询二级权限-->
+    <select id="getByParentId" parameterType="long" resultMap="perMap002">
+        select * from eas_permission where parentid = #{id}
+    </select>
+
+    <resultMap id="perMap" type="com.jubilantz.entity.EasPermission" autoMapping="true">
+        <id column="id" property="id"></id>
+        <collection property="children" javaType="java.util.List" ofType="com.jubilantz.entity.EasPermission" column="id" select="getByParentId"></collection>
+    </resultMap>
+    <select id="getParentPers" resultMap="perMap">
+        select * from eas_permission where parentid is null
+    </select>
+
+    <select id="getPersByUserId" parameterType="int" resultType="com.jubilantz.entity.EasPermission">
+      select * from eas_permission where id in
+        (select distinct eas_permission_id from eas_role_permission where eas_role_id in
+          (select eas_role_id from eas_user_role where eas_user_id = #{id}) )
+    </select>
+</mapper>

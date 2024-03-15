@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasNoticeMapper">
+
+    <resultMap id="BaseResultMap" type="com.jubilantz.entity.EasNotice">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="title" jdbcType="VARCHAR" property="title" />
+        <result column="author" jdbcType="VARCHAR" property="author" />
+        <result column="content" jdbcType="VARCHAR" property="content" />
+        <result column="type" jdbcType="INTEGER" property="type" />
+        <result column="releasedate" jdbcType="DATE" property="releasedate" />
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, title, author, content, type, releasedate
+    </sql>
+    <insert id="addNotice" parameterType="com.jubilantz.entity.EasNotice">
+    insert into eas_notice (id, title, author,content, type, releasedate)
+        values (
+        #{id,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR}, #{author,jdbcType=VARCHAR},
+        #{content,jdbcType=VARCHAR}, #{type,jdbcType=INTEGER}, CURDATE()
+      )
+    </insert>
+    <update id="updateNotice" parameterType="com.jubilantz.entity.EasNotice">
+        update eas_notice
+        <set>
+            <if test="title != null">
+                title = #{title,jdbcType=VARCHAR},
+            </if>
+            <if test="author != null">
+                author = #{author,jdbcType=VARCHAR},
+            </if>
+            <if test="content != null">
+                content = #{content,jdbcType=VARCHAR},
+            </if>
+            <if test="type != null">
+                type = #{type,jdbcType=INTEGER},
+            </if>
+            releasedate = CURDATE(),
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <delete id="deleteNotice" parameterType="com.jubilantz.entity.EasNotice">
+        delete from eas_notice
+        where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <delete id="deleteNoticeList">
+        delete
+        from eas_notice
+        where id in
+        <foreach collection="list" item="id" separator="," open="(" close=")" >
+            #{id,jdbcType=INTEGER}
+        </foreach>
+    </delete>
+
+    <!--    大于等于:&gt;=-->
+    <!--    小于等于:&lt;=-->
+    <select id="getCountByType" resultType="java.lang.Integer">
+        select count(*)
+        from eas_notice
+        where type &lt;= #{type, jdbcType=INTEGER}
+        <if test="searchKey != null and searchKey != '' ">
+            and title like CONCAT('%', #{searchKey, jdbcType=VARCHAR}, '%')
+        </if>
+    </select>
+    <select id="getNoticeListByType" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from eas_notice
+        where type &lt;= #{type, jdbcType=INTEGER}
+        <if test="searchKey != null and searchKey != '' ">
+            and title like CONCAT('%', #{searchKey, jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="getCountByTypeAndEasNotice" resultType="java.lang.Integer">
+        select count(*)
+        from eas_notice
+        where type &lt;= #{type, jdbcType=INTEGER}
+        <if test="easNotice.title != null and easNotice.title != '' ">
+            and title like CONCAT('%', #{easNotice.title, jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="easNotice.content != null and easNotice.content != '' ">
+            and content like CONCAT('%', #{easNotice.content, jdbcType=VARCHAR}, '%')
+        </if>
+    </select>
+    <select id="getNoticeListByTypeAndEasNotice" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from eas_notice
+        where type &lt;= #{type, jdbcType=INTEGER}
+        <if test="easNotice.title != null and easNotice.title != '' ">
+            and title like CONCAT('%', #{easNotice.title, jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="easNotice.content != null and easNotice.content != '' ">
+            and content like CONCAT('%', #{easNotice.content, jdbcType=VARCHAR}, '%')
+        </if>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="getNoticeById" resultType="com.jubilantz.entity.EasNotice">
+        select
+        <include refid="Base_Column_List" />
+        from eas_notice
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+</mapper>
