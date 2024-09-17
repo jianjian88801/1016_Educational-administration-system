@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasScoreMapper">
+    <resultMap id="BaseResultMapScore" type="com.jubilantz.entity.EasScore">
+        <id column="id" jdbcType="INTEGER" property="id" />
+        <result column="score" jdbcType="INTEGER" property="score" />
+        <result column="result" jdbcType="VARCHAR" property="result" />
+        <result column="c_id" jdbcType="INTEGER" property="cId" />
+        <result column="s_id" jdbcType="INTEGER" property="sId" />
+    </resultMap>
+
+    <resultMap id="BaseResultMap" type="com.jubilantz.entity.EasCourse">
+        <result column="start_date" jdbcType="DATE" property="startDate" />
+        <result column="courseName" jdbcType="VARCHAR" property="courseName" />
+        <result column="teacherName" jdbcType="VARCHAR" property="teacherName" />
+        <result column="test_mode" jdbcType="VARCHAR" property="testMode" />
+        <result column="score" jdbcType="INTEGER" property="score" />
+        <result column="result" jdbcType="VARCHAR" property="result" />
+    </resultMap>
+
+    <insert id="insertSelective" parameterType="com.jubilantz.entity.EasScore">
+        insert into eas_score
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="score != null">
+                score,
+            </if>
+            <if test="result != null">
+                result,
+            </if>
+            <if test="cId != null">
+                c_id,
+            </if>
+            <if test="sId != null">
+                s_id,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="score != null">
+                #{score,jdbcType=INTEGER},
+            </if>
+            <if test="result != null">
+                #{result,jdbcType=VARCHAR},
+            </if>
+            <if test="cId != null">
+                #{cId,jdbcType=INTEGER},
+            </if>
+            <if test="sId != null">
+                #{sId,jdbcType=INTEGER},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateScore">
+        update eas_score
+        <set>
+            <if test="score != null">
+                score = #{score,jdbcType=INTEGER},
+            </if>
+            <if test="result != null">
+                result = #{result,jdbcType=VARCHAR},
+            </if>
+            <if test="cId != null">
+                c_id = #{cId,jdbcType=INTEGER},
+            </if>
+            <if test="sId != null">
+                s_id = #{sId,jdbcType=INTEGER},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateScoreByScoreList" parameterType="java.util.List">
+        update eas_score
+        --  suffixOverrides:指定去除多余的后缀内容 --
+        <trim prefix="set" suffixOverrides=",">
+            -- prefix:在trim标签内sql语句加上前缀。suffix:在trim标签内sql语句加上后缀 --
+            <trim prefix="score = case" suffix="end ,">
+                <foreach collection="list" item="item">
+                    when id = #{item.id}
+                    then #{item.score}
+                </foreach>
+            </trim>
+            <trim prefix="result = case" suffix="end ,">
+                <foreach collection="list" item="item">
+                    when id = #{item.id}
+                    then #{item.result}
+                </foreach>
+            </trim>
+        </trim>
+        where id in
+        <foreach collection="list" item="item" separator="," open="(" close=")" >
+            #{item.id,jdbcType=INTEGER}
+        </foreach>
+    </update>
+    <delete id="deleteScore" parameterType="com.jubilantz.entity.EasScore">
+        delete from eas_score
+        where c_id = #{cId,jdbcType=INTEGER}
+        and s_id = #{sId,jdbcType=INTEGER}
+    </delete>
+    <select id="getTotalItemsCount" resultType="java.lang.Integer">
+        select count(*)
+        from eas_score, eas_course as C
+        where eas_score.c_id = C.id
+        and C.complete = 1
+        and s_id = #{sId,jdbcType=INTEGER}
+        <if test="result == 1">
+            and (score >= 60 or result = '通过')
+        </if>
+        <if test="result == 0">
+            and (60 > score or result = '未通过')
+        </if>
+    </select>
+    <select id="getCourseListBySid" resultMap="BaseResultMap">
+        select start_date, BC.coursename as courseName,
+        T.name as teacherName, test_mode,
+        score, result
+        from eas_score as S, eas_course as C,eas_teacher as T, eas_base_course as BC
+        where S.c_id = C.id
+        and C.base_course_id = BC.id
+        and C.t_id = T.id
+        and C.complete = 1
+        and S.s_id = #{sId,jdbcType=INTEGER}
+        <if test="result == 1">
+            and (score >= 60 or result = '及格')
+        </if>
+        <if test="result == 0">
+            and (60 > score or result = '不及格')
+        </if>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+<!--    直接查外键的值报空 需要关连resultMap   -->
+    <select id="getcIdById" resultType="com.jubilantz.entity.EasScore" resultMap="BaseResultMapScore">
+        select * from eas_score where id = #{id}
+    </select>
+    <select id="getStartDateByCourseId" resultType="java.util.Date">
+        select start_date from eas_course where id = #{courseId}
+    </select>
+</mapper>

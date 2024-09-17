@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasClassMapper">
+    <insert id="addClass">
+        insert into eas_class(classes)
+          values (#{classes})
+    </insert>
+    <update id="updateClass">
+        update eas_class
+        <set>
+            <if test="classes != null">classes = #{classes}</if>
+        </set>
+        where id=#{id}
+    </update>
+    <delete id="batchDeleteClass">
+        delete from eas_class where id in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+    <select id="getAll" resultType="com.jubilantz.entity.EasClass">
+        select * from eas_class
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from eas_class
+    </select>
+    <select id="getList" resultType="com.jubilantz.entity.EasClass">
+        select * from eas_class
+        <where>
+            <if test="easClass.classes != null and easClass.classes != ''">
+                and classes like concat('%',#{easClass.classes},'%')
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="findClassName" resultType="com.jubilantz.entity.EasClass">
+        select * from eas_class where classes = #{classes}
+    </select>
+    <select id="getClassView" resultType="com.jubilantz.entity.EasClass">
+        select * from eas_class where id = #{id}
+    </select>
+
+</mapper>

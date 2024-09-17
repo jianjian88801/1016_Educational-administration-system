@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasBaseCourseMapper">
+    <insert id="addBaseCourse">
+        insert into eas_base_course(coursename,synopsis)
+          values (#{coursename},#{synopsis})
+    </insert>
+    <update id="updateBaseCourse">
+        update eas_base_course
+        <set>
+            <if test="coursename != null">coursename = #{coursename},</if>
+            <if test="synopsis != null">synopsis = #{synopsis}</if>
+        </set>
+        where id=#{id}
+    </update>
+    <delete id="batchDeleteBaseCourse" parameterType="java.lang.reflect.Array">
+        delete from eas_base_course where id in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getAll" resultType="com.jubilantz.entity.EasBaseCourse">
+        select * from eas_base_course
+    </select>
+    <select id="getListById" resultType="com.jubilantz.entity.EasBaseCourse">
+        select * from eas_base_course where id = #{id}
+    </select>
+    <select id="getBaseCourseById" resultType="com.jubilantz.entity.EasBaseCourse">
+        select * from eas_base_course where id = #{id}
+    </select>
+    <select id="getList" resultType="com.jubilantz.entity.EasBaseCourse">
+        select * from eas_base_course
+        <where>
+            <if test="easBaseCourse.coursename != null and easBaseCourse.coursename != ''">
+                and coursename like concat('%',#{easBaseCourse.coursename},'%')
+            </if>
+            <if test="easBaseCourse.synopsis != null and easBaseCourse.synopsis != ''">
+                and synopsis like concat('%',#{easBaseCourse.synopsis},'%')
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from eas_base_course
+    </select>
+    <select id="findBaseCourseName" resultType="com.jubilantz.entity.EasBaseCourse">
+        select * from eas_base_course where coursename = #{baseCourseName}
+    </select>
+
+</mapper>

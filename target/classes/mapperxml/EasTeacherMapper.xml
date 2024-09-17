@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasTeacherMapper">
+
+    <resultMap id="resTeacher" type="com.jubilantz.entity.EasTeacher">
+        <!-- property指实体类 -->
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="name" column="name"/>
+        <result property="sex" column="sex"/>
+        <result property="birthday" column="birthday"/>
+        <result property="phone" column="phone"/>
+        <result property="education" column="education"/>
+        <result property="motto" column="motto"/>
+        <association property="user" javaType="com.jubilantz.entity.EasUser">
+            <id property="id" column="id"/>
+            <result property="username" column="username"/>
+        </association>
+    </resultMap>
+    <insert id="addUsername">
+        insert into eas_teacher(username)
+          values (#{username})
+    </insert>
+    <update id="updateTeacher">
+        update eas_teacher
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="education != null">education = #{education},</if>
+            <if test="motto != null">motto = #{motto}</if>
+        </set>
+        where username=#{username}
+    </update>
+    <delete id="deleteTeacher">
+        delete from eas_teacher
+        <where>
+            <if test="username != null and username != ''">
+                username = #{username}
+            </if>
+        </where>
+    </delete>
+
+    <select id="findTeacherList" parameterType="com.jubilantz.entity.EasTeacher" resultMap="resTeacher">
+        SELECT t.id,u.username,t.name,t.sex,t.birthday,t.phone,t.education,t.motto
+        FROM  eas_teacher as t
+        inner join eas_user as u on t.username = u.username
+
+        <where>
+            <if test="name != null and name != ''">
+                and name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+            </if>
+            <if test="phone != null and phone !=''">
+                and phone like CONCAT('%',#{phone,jdbcType=VARCHAR},'%')
+            </if>
+            <if test="education != null and education !=''">
+                and education like CONCAT('%',#{education,jdbcType=VARCHAR},'%')
+            </if>
+        </where>
+        order by id ASC;
+    </select>
+    <select id="findListByUsername" resultType="com.jubilantz.entity.EasTeacher">
+        select * from eas_teacher
+        where username = #{username,jdbcType=VARCHAR}
+    </select>
+    <select id="getTeacherByUsername" resultType="com.jubilantz.entity.EasTeacher">
+        select * from eas_teacher
+        where username = #{username,jdbcType=VARCHAR}
+    </select>
+    <select id="getAll" resultType="com.jubilantz.entity.EasTeacher">
+        select * from eas_teacher
+    </select>
+    <select id="findTeacherByUsername" resultType="com.jubilantz.entity.EasTeacher">
+        select * from eas_teacher where username = #{username,jdbcType=VARCHAR}
+    </select>
+    <select id="getTotal" resultType="java.lang.Integer">
+        select count(*) from eas_teacher
+    </select>
+
+
+</mapper>

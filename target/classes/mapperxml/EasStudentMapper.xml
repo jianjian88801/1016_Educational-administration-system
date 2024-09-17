@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasStudentMapper">
+
+    <resultMap id="resStudent" type="com.jubilantz.entity.EasStudent">
+        <!-- property指实体类 -->
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="name" column="name"/>
+        <result property="sex" column="sex"/>
+        <result property="birthday" column="birthday"/>
+        <result property="phone" column="phone"/>
+        <result property="motto" column="motto"/>
+        <result property="class_id" column="class_id"/>
+        <association property="user" javaType="com.jubilantz.entity.EasUser">
+            <id property="id" column="id"/>
+            <result property="username" column="username"/>
+        </association>
+
+        <association property="easClass" javaType="com.jubilantz.entity.EasClass">
+            <id property="id" column="id"/>
+            <result property="classes" column="classes"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="BaseResultMap" type="com.jubilantz.entity.EasStudent">
+        <id column="sId" jdbcType="VARCHAR" property="id" />
+        <result column="sName" jdbcType="VARCHAR" property="name" />
+        <result column="sex" jdbcType="VARCHAR" property="sex" />
+        <result column="phone" jdbcType="VARCHAR" property="phone" />
+            <result column="id" property="id" />
+            <result column="score" property="score" />
+            <result column="result" property="result" />
+            <result column="courseName" property="courseName" />
+            <!-- 班级名称 -->
+            <result column="className" jdbcType="VARCHAR" property="className" />
+    </resultMap>
+    <insert id="addUsername">
+        insert into eas_student(username,class_id)
+          values (#{username},12)
+    </insert>
+
+    <update id="updateStudent">
+        update eas_student
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="sex != null">sex = #{sex},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="class_id != null">class_id = #{class_id},</if>
+            <if test="motto != null">motto = #{motto}</if>
+        </set>
+        where username=#{username}
+    </update>
+    <delete id="deleteStudent">
+        delete from eas_student
+         where username = #{username,jdbcType=VARCHAR}
+
+    </delete>
+
+
+    <select id="getList" parameterType="com.jubilantz.entity.EasStudent" resultType="com.jubilantz.entity.EasStudent">
+        select * from eas_student
+        <where>
+            <if test="name != null and name != ''">
+                and name like concat('%',#{name},'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="findList" parameterType="com.jubilantz.entity.EasStudent" resultMap="resStudent">
+        SELECT s.id,u.username,s.name,s.sex,s.birthday,s.phone,c.classes,s.motto
+        FROM ( eas_student as s inner join eas_class as c on s.class_id = c.id)
+        inner join eas_user as u on s.username = u.username
+
+        <where>
+            <if test="name != null and name != ''">
+                and name like CONCAT('%',#{name,jdbcType=VARCHAR},'%')
+            </if>
+            <if test="phone != null and phone !=''">
+                and phone like CONCAT('%',#{phone,jdbcType=VARCHAR},'%')
+            </if>
+<!--            <if test="class_id != null and class_id !=''">-->
+<!--                and c.id in(select id from eas_class where id = #{class_id.id,jdbcType=VARCHAR})-->
+<!--            </if>-->
+<!--            <if test="class_id != null and class_id !=''">-->
+            <if test="class_id != null and class_id !=''">
+              and class_id = #{class_id}
+            </if>
+
+        </where>
+        order by id ASC;
+    </select>
+    <select id="findListByUsername" resultMap="resStudent">
+        select * from ( eas_student as s inner join eas_class as c on s.class_id = c.id)
+        where username = #{username,jdbcType=VARCHAR}
+    </select>
+
+    <select id="getStudentByUsername" resultMap="resStudent">
+        select * from ( eas_student as s inner join eas_class as c on s.class_id = c.id)
+        where username = #{username,jdbcType=VARCHAR}
+    </select>
+
+    <select id="getCountBytIdandcId" resultType="java.lang.Integer">
+        select count(*)
+        from eas_student as A, eas_score as B, eas_course as C, eas_base_course as BC,eas_class as CS
+        <where>
+            A.id = B.s_id and C.id = B.c_id and C.base_course_id = BC.id and CS.id = A.class_id
+            -- 未结束课程 complete = 0 --
+            and C.complete = 0
+            and C.t_id = #{tId}
+            <if test="baseCourseId != null and baseCourseId != ''">
+                and C.base_course_id = #{baseCourseId}
+            </if>
+            <if test="classId != null and classId != ''">
+                and A.class_id = #{classId}
+            </if>
+        </where>
+    </select>
+    <select id="getEndingCountBytIdandcId" resultType="java.lang.Integer">
+        select count(*)
+        from eas_student as A, eas_score as B, eas_course as C, eas_base_course as BC,eas_class as CS
+        <where>
+            A.id = B.s_id and C.id = B.c_id and C.base_course_id = BC.id and CS.id = A.class_id
+            -- 已结束课程 complete = 1 --
+            and C.complete = 1
+            and C.t_id = #{tId}
+            <if test="baseCourseId != null and baseCourseId != ''">
+                and C.base_course_id = #{baseCourseId}
+            </if>
+            <if test="classId != null and classId != ''">
+                and A.class_id = #{classId}
+            </if>
+        </where>
+    </select>
+
+    <select id="getStudentScoreListByTid" resultMap="BaseResultMap">
+        select B.id as id, A.id as sId, A.name as sName, sex, phone,
+        score, result, C.id as cId, BC.coursename as courseName,CS.classes as className
+        from eas_student as A , eas_score as B , eas_course as C , eas_base_course as BC,eas_class as CS
+        <where>
+            A.id = B.s_id and C.id = B.c_id and C.base_course_id = BC.id and A.class_id = CS.id
+            and C.complete = 1
+            and C.t_id = #{tId}
+            <if test="baseCourseId != null and baseCourseId != '' ">
+                and C.base_course_id = #{baseCourseId}
+            </if>
+            <if test="classId != null and classId != ''">
+                and A.class_id = #{classId}
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="getStudentSelectCourseListByTid" resultMap="BaseResultMap">
+        select B.id as id, A.id as sId, A.name as sName, sex, phone,
+            C.id as cId, BC.coursename as courseName,CS.classes as className
+        from eas_student as A , eas_score as B , eas_course as C , eas_base_course as BC,eas_class as CS
+        <where>
+            A.id = B.s_id and C.id = B.c_id and C.base_course_id = BC.id and A.class_id = CS.id
+            and C.complete = 0
+            and C.t_id = #{tId}
+            <if test="baseCourseId != null and baseCourseId != '' ">
+                and C.base_course_id = #{baseCourseId}
+            </if>
+            <if test="classId != null and classId != ''">
+                and A.class_id = #{classId}
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="getTotal" resultType="java.lang.Integer">
+        select count(*) from eas_student
+    </select>
+    <select id="getTotalSex" resultType="java.lang.Integer">
+        select count(*) from eas_student
+        where sex = #{sex,jdbcType=VARCHAR}
+    </select>
+
+
+</mapper>

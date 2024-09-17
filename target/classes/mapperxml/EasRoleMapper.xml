@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jubilantz.mappers.EasRoleMapper">
+    <update id="updateBaseCourse">
+        update eas_role
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="available != null">available = #{available}</if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <delete id="deleteRolePermissions" parameterType="int">
+        delete from eas_role_permission where eas_role_id = #{id}
+    </delete>
+    <delete id="batchDeleteRole">
+        delete from eas_role where id in
+        <foreach collection="array" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="addRolePermissions">
+        insert into eas_role_permission(eas_role_id,eas_permission_id)
+          values
+          <foreach collection="perIds" item="item" separator=",">
+              (#{roleId},#{item})
+          </foreach>
+    </insert>
+    <insert id="addRole">
+        insert into eas_role
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                name,
+            </if>
+            <if test="available != null">
+                available
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="available != null">
+                #{available,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+
+    <select id="getPerIdsByRoleId" parameterType="int" resultType="java.lang.Long">
+        select eas_permission_id from eas_role_permission where eas_role_id = #{id}
+    </select>
+
+    <select id="getByUserId" parameterType="int" resultType="com.jubilantz.entity.EasRole">
+      select * from eas_role where id in (
+          select eas_role_id from eas_user_role where eas_user_id = #{id}
+      )
+    </select>
+    <select id="getAll" resultType="com.jubilantz.entity.EasRole">
+        select * from eas_role
+    </select>
+
+    <select id="getList" parameterType="com.jubilantz.entity.EasRole" resultType="com.jubilantz.entity.EasRole">
+        select * from eas_role
+        <where>
+            <if test="easRole.name != null and easRole.name != ''">
+                and name like concat('%',#{easRole.name},'%')
+            </if>
+        </where>
+        <if test="pageUtil != null">
+            limit #{pageUtil.pageStart},#{pageUtil.count}
+        </if>
+    </select>
+    <select id="findRoleNameByRoleId" resultType="java.lang.String">
+        select name from eas_role where id =#{roleid}
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from eas_role
+    </select>
+    <select id="findRoleName" resultType="com.jubilantz.entity.EasRole">
+        select * from eas_role where name = #{name}
+    </select>
+    <select id="getRoleView" resultType="com.jubilantz.entity.EasRole">
+        select * from eas_role where id = #{id}
+    </select>
+</mapper>
